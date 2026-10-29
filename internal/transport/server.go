@@ -1,31 +1,24 @@
-package http
+package transport
 
 import (
-	"context"
-	"kaspersky-testovoe/db"
-	"log"
 
 	// "github.com/labstack/echo/middleware"
+
+	"kaspersky-testovoe/internal/service"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func startServer() {
+func StartServer(service *service.ThreatService) {
 	e := echo.New()
 
-	e.Use(middleware)
+	e.Use(middleware.RequestLogger())
+	e.Use(middleware.Recover())
 	// e.Use(middleware.Logger())
 	// e.Use(middleware.Recover())
 
-	ctx := context.Background()
-	new_pool, err := db.ConnectDB(ctx)
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
-	d := db.NewRepostoryDB(new_pool)
-
-	threatHandler := NewThreatHandler(d)
+	threatHandler := NewThreatHandler(service)
 
 	e.GET("/info/:md5", threatHandler.GetThreatHandler)
 	e.POST("/info", threatHandler.InsertThreatHandler)
